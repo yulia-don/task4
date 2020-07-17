@@ -8,11 +8,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var url *string
 var result *string
 var dataUrl []string
+var wg sync.WaitGroup
 
 func init() {
 	url = flag.String("url", "C://Users/Стажер/Desktop/task/4/adres.txt", "a string")
@@ -37,15 +39,16 @@ func main() {
 		}
 		dataUrl = strings.Fields(string(data[:n]))
 	}
+	wg.Add(len(dataUrl))
 
 	for i := 0; i < len(dataUrl); i++ {
 		go getsH(i)
 	}
-	fmt.Scanln()
+	wg.Wait()
 }
 
 func getsH(i int) {
-	resp, err := http.Get("" + dataUrl[i] + "")
+	resp, err := http.Get(dataUrl[i])
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -60,4 +63,5 @@ func getsH(i int) {
 	defer tmp.Close()
 	io.Copy(tmp, resp.Body)
 	fmt.Println(strconv.Itoa(i) + " all")
+	defer wg.Done()
 }
